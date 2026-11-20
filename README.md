@@ -31,9 +31,9 @@ The included workflow runs the data tests and publishes only the app files. All 
 ## What works
 
 - Responsive dashboard and weekly schedule, with three strength sessions, Tuesday volleyball, pool conditioning, and recovery.
-- Original animated SVG joint diagrams for all 15 prescribed movements; individual cues, pause/play, and reduced-motion support. These are illustrative movement guides, not motion capture or form assessments.
+- Original animated SVG joint diagrams for all 26 available movements; individual cues, pause/play, and reduced-motion support. These are illustrative movement guides, not motion capture or form assessments.
 - Guided workouts: manual reps/seconds and load entry, each-side reminders, set checkmarks, two-minute rest timers, extra rest, undo, skip, partial-session saves, and reload-safe resume.
-- Local progression: two sets in weeks 1–2 and planned volume from week 3. Rep ranges and instructions explain when to add resistance. Workloads are not medically assessed or automatically personalized from wearable data.
+- Build is the default intensity: full planned sets, usually 1–2 clean reps in reserve on strength movements. Foundation uses two sets in weeks 1–2. Rep ranges and instructions explain when to add resistance. Workloads are not medically assessed or automatically personalized from wearable data.
 - XP, levels, earned milestones, actual activity-minute charts, XP history, session journal, weight tracking, and protein logs.
 - Recovery gets credit. No punishment streak, weight-gain XP, maximum-heart-rate challenge, or reward for overfilling the protein goal.
 - Data export/import with review before replacement. Offline shell with a service worker and installable manifest.
@@ -44,8 +44,16 @@ Progress is stored under the original `kinetic.v1` key in this browser’s local
 
 The public site has no login or backend. There is no Apple Watch / HealthKit integration. Charts start with zero recorded activity and no assumed body weight. An existing baseline from a local backup is preserved. No sample workouts are mixed into actual progress.
 
-Exercise load fields mean the label shown (usually per dumbbell). Row repetitions are per side; split-squat repetitions are per leg. Training-load totals count paired dumbbells and sides and exclude unloaded/bodyweight moves. They are an equipment-volume metric, not a measurement of muscle gain or exercise quality. Session minutes are elapsed time, including rest.
+Exercise load fields mean the label shown (usually per dumbbell). Row repetitions are per side; split-squat repetitions are per leg. Training-load totals count paired dumbbells and sides and exclude unloaded/bodyweight moves and timed carries (seconds are not repetitions). They are an equipment-volume metric, not a measurement of muscle gain or exercise quality. Session minutes are elapsed time, including rest.
 
 After changing offline assets, increment the cache version in `sw.js` before publishing. The service worker uses network-first requests with an offline cache fallback. Rest countdowns use absolute timestamps; sounds may be silenced or delayed if iOS suspends the browser. Timers do not send notifications while the app is closed.
 
 Training sources are linked in **Your setup → Program notes & sources**. A first 8-week block is a starting program, to be refined from actual recovery and performance.
+
+## Build mode, exercise choices, and work timers
+
+- Six-move workouts include alternating curls, single-arm rows, push-ups, pull-up/knee-tuck combinations, plate-held rotational lunges, lateral bounds and high-knee farmer carries. The library also includes stable-platform step-ups, suitcase marches, bear shoulder taps, kickstand RDLs, supported pull-ups, and unloaded lateral steps. Use same-focus swaps in the player before logging the first set.
+- Step-ups require a fixed, non-slip platform; no bench is assumed. Rotational lunges hold a plate on firm ground. Start bounds unloaded and finish before technique deteriorates. Advanced hanging combinations have supported alternatives.
+- Timed sets have start/pause/resume/reset, reload-safe deadlines, explicit side changes for unilateral work, and manual logging after completion. Timer completion itself never awards XP or logs work. Set the actual duration manually after resetting if you finish early. Sounds require an open, awake browser; background iOS notifications are not implemented.
+- Active workouts save their exercise IDs and set targets. New training modes and programme edits apply to the next workout. Pre-update active workouts retain the legacy plan. Logs, rewards, and backups remain compatible.
+- Carry seconds are excluded from repetition-based load volume. Rest remains two minutes, extendable. Follow the Train page effort and progression guidance; soreness is not a training target.

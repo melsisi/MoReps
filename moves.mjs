@@ -17,16 +17,32 @@ const POSES = {
   walkout:[pose({head:[55,255],s:[92,255],h:[172,216],el:[129,267],er:[134,266],wl:[162,277],wr:[170,276],kl:[214,206],kr:[225,212],fl:[239,277],fr:[250,277]}),pose({head:[55,255],s:[92,255],h:[170,235],el:[129,267],er:[134,266],wl:[162,277],wr:[170,276],kl:[223,249],kr:[231,251],fl:[278,277],fr:[290,277]})],
   calf:[pose({el:[130,128],wl:[106,106],er:[192,140],wr:[194,184],kr:[200,225],fr:[214,241]}),pose({head:[160,48],s:[160,88],h:[160,158],el:[130,115],wl:[106,106],er:[192,124],wr:[194,168],kl:[139,209],fl:[143,263],kr:[200,209],fr:[214,225]})],
   deadbug:[pose({head:[58,256],s:[98,256],h:[184,256],el:[106,212],er:[126,215],wl:[112,170],wr:[136,176],kl:[201,205],kr:[218,214],fl:[247,205],fr:[261,214]}),pose({head:[58,256],s:[98,256],h:[184,256],el:[62,235],er:[126,215],wl:[26,226],wr:[136,176],kl:[233,255],kr:[218,214],fl:[282,264],fr:[261,214]})],
+  altcurl:[pose({wl:[138,100]}),pose({wr:[182,100]})],
+  stepup:[pose({head:[146,92],s:[146,132],h:[146,196],kl:[191,205],fl:[204,237],kr:[125,239],fr:[119,278]}),pose({head:[184,22],s:[184,62],h:[184,130],kl:[191,181],fl:[204,237],kr:[146,161],fr:[150,199],el:[153,103],er:[214,103],wl:[150,147],wr:[217,147]})],
+  rotationlunge:[pose({wl:[149,133],wr:[172,133]}),pose({head:[143,109],s:[144,149],h:[158,211],el:[106,170],er:[159,170],wl:[117,177],wr:[139,177],kl:[101,228],kr:[217,263],fl:[99,278],fr:[231,278]})],
+  bounds:[pose({head:[107,91],s:[107,131],h:[110,191],kl:[85,232],fl:[76,278],kr:[160,218],fr:[179,247],wl:[67,199],wr:[151,191]}),pose({head:[213,91],s:[213,131],h:[210,191],kr:[235,232],fr:[244,278],kl:[160,218],fl:[141,247],wl:[171,191],wr:[253,199]})],
+  sidestep:[pose({head:[120,64],s:[120,104],h:[120,174],kl:[99,225],fl:[92,278],kr:[152,225],fr:[162,278]}),pose({head:[195,64],s:[195,104],h:[195,174],kl:[160,220],fl:[148,255],kr:[215,225],fr:[225,278]})],
+  farmer:[pose({kl:[119,180],fl:[123,222]}),pose({kr:[202,180],fr:[205,222]})],
+  suitcase:[pose({wl:[124,181],wr:[194,181],kl:[119,180],fl:[123,222]}),pose({wl:[124,181],wr:[194,181],kr:[202,180],fr:[205,222]})],
+  bstance:[pose({kr:[210,230],fr:[239,278]}),pose({head:[93,127],s:[123,150],h:[195,180],el:[118,191],er:[139,195],wl:[115,231],wr:[138,236],kl:[166,228],kr:[226,232],fl:[143,278],fr:[247,278]})],
+  bear:[pose({head:[76,168],s:[107,193],h:[188,205],el:[100,230],er:[135,222],wl:[96,278],wr:[117,196],kl:[203,249],kr:[227,250],fl:[241,278],fr:[263,278]}),pose({head:[76,168],s:[107,193],h:[188,205],el:[123,218],er:[116,238],wl:[133,195],wr:[123,278],kl:[203,249],kr:[227,250],fl:[241,278],fr:[263,278]})],
+  pulluptuck:[pose({head:[160,103],s:[160,138],h:[160,205],el:[119,100],er:[201,100],wl:[112,38],wr:[208,38],kl:[141,247],kr:[181,247],fl:[135,282],fr:[187,282]}),pose({head:[160,29],s:[160,65],h:[160,132],el:[115,94],er:[205,94],wl:[112,38],wr:[208,38],kl:[141,190],kr:[181,190],fl:[135,235],fr:[187,235]}),pose({head:[160,103],s:[160,138],h:[160,205],el:[119,100],er:[201,100],wl:[112,38],wr:[208,38],kl:[141,247],kr:[181,247],fl:[135,282],fr:[187,282]}),pose({head:[160,103],s:[160,138],h:[160,205],el:[119,100],er:[201,100],wl:[112,38],wr:[208,38],kl:[119,179],kr:[187,179],fl:[114,221],fr:[199,221]})],
+  assistpull:[pose({head:[155,130],s:[155,164],h:[164,218],el:[116,146],er:[205,146],wl:[112,108],wr:[208,108],kl:[115,239],kr:[219,239],fl:[100,278],fr:[233,278]}),pose({head:[155,91],s:[155,125],h:[164,192],el:[117,158],er:[204,158],wl:[112,108],wr:[208,108],kl:[115,224],kr:[219,224],fl:[100,278],fr:[233,278]})],
+
 };
-const weighted = new Set(['squat','split','hinge','row','floorpress','overhead','curl','lateral']);
+export const MOVEMENT_IDS=Object.keys(POSES);
+const weighted = new Set(['squat','split','hinge','row','floorpress','overhead','curl','lateral','altcurl','stepup','farmer','suitcase','bstance']);
 const pt = p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
 const path = (points,stroke,width) => `<polyline points="${points.map(pt).join(' ')}" fill="none" stroke="${stroke}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
 function skeleton(move,t,dark) {
-  const [a,b]=POSES[move]||POSES.squat;
+  const frames=POSES[move]||POSES.squat,phase=t*(frames.length-1),index=Math.min(frames.length-2,Math.floor(phase)),a=frames[index],b=frames[index+1];t=phase-index;
   const p=Object.fromEntries(Object.keys(a).map(k=>[k,[a[k][0]+(b[k][0]-a[k][0])*t,a[k][1]+(b[k][1]-a[k][1])*t]]));
   const skin=dark?'#f3f4d7':'#245242',rear=dark?'#97b494':'#7d9b80',shirt=dark?'#d8fa76':'#436b41',shoe=dark?'#ff966d':'#e58254';
   let html='';
   if(move==='ringrow') html+=path([[130,5],p.wl],rear,3)+path([[164,5],p.wr],rear,3)+`<circle cx="${p.wl[0]}" cy="${p.wl[1]}" r="10" fill="none" stroke="#ff966d" stroke-width="4"/><circle cx="${p.wr[0]}" cy="${p.wr[1]}" r="10" fill="none" stroke="#ff966d" stroke-width="4"/>`;
+  if(move==='stepup') html+=`<path d="M176 278V238H249V278" fill="none" stroke="${rear}" stroke-width="8"/>`;
+  if(move==='pulluptuck'||move==='assistpull') html+=path([[83,move==='assistpull'?108:38],[237,move==='assistpull'?108:38]],rear,7);
+  if(move==='rotationlunge'){const x=(p.wl[0]+p.wr[0])/2,y=(p.wl[1]+p.wr[1])/2;html+=`<circle cx="${x}" cy="${y}" r="18" fill="none" stroke="${shoe}" stroke-width="7"/>`;}
   if(move==='calf') html+=path([[96,70],[96,283]],rear,4);
   html+=path([p.h,p.kr,p.fr],rear,15)+path([p.s,p.er,p.wr],rear,12);
   html+=path([p.h,p.kl,p.fl],skin,17)+path([p.s,p.h],shirt,33)+path([p.s,p.el,p.wl],skin,13);
@@ -35,7 +51,7 @@ function skeleton(move,t,dark) {
   for(const [k,v] of Object.entries(p)) if(['el','kl','er','kr'].includes(k)) html+=`<circle cx="${v[0]}" cy="${v[1]}" r="3" fill="${shirt}" opacity=".65"/>`;
   html+=path([[p.fl[0]-8,p.fl[1]],[p.fl[0]+10,p.fl[1]]],shoe,9)+path([[p.fr[0]-7,p.fr[1]],[p.fr[0]+11,p.fr[1]]],shoe,8);
   if(weighted.has(move)) {
-    const hands=move==='squat'?[[(p.wl[0]+p.wr[0])/2,(p.wl[1]+p.wr[1])/2]]:move==='row'?[p.wl]:[p.wr,p.wl];
+    const hands=move==='squat'?[[(p.wl[0]+p.wr[0])/2,(p.wl[1]+p.wr[1])/2]]:(move==='row'||move==='suitcase')?[p.wl]:[p.wr,p.wl];
     for(const v of hands) html+=`<g transform="translate(${v[0]},${v[1]})"><path d="M-15 0H15" stroke="${shoe}" stroke-width="5"/><rect x="-19" y="-10" width="8" height="20" rx="3" fill="${shoe}"/><rect x="11" y="-10" width="8" height="20" rx="3" fill="${shoe}"/></g>`;
   }
   return html;
