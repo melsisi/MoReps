@@ -56,3 +56,41 @@ test('Public defaults omit measurements while private baseline backups remain co
   s.profile.startingWeight=160;assert.equal(validateBackup(structuredClone(s)).profile.startingWeight,160);
   s.profile.startingWeight='<unsafe>';assert.equal(validateBackup(structuredClone(s)).profile.startingWeight,null);
 });
+
+test('Build increases work without changing a saved or legacy active plan',async()=>{
+  const {createSession,sessionWorkout,sessionTarget}=await import('../core.mjs');
+  const s=defaultState();s.activeSession=createSession('homeA',1,'build');
+  assert.equal(sessionTarget(s.activeSession,'squat'),3);
+  assert.equal(targetSets('overhead',5,'build'),3);assert.equal(targetSets('overhead',5,'foundation'),2);
+  const plan=[...sessionWorkout(s.activeSession).exerciseIds];s.preferences.intensity='foundation';
+  assert.deepEqual(sessionWorkout(validateBackup(structuredClone(s)).activeSession).exerciseIds,plan);
+  assert.equal(sessionTarget(s.activeSession,'squat'),3);
+  s.activeSession={...session('2026-10-21'),week:1,exerciseIndex:0,skipped:[],restUntil:null};
+  const legacy=validateBackup(s).activeSession;
+  assert.equal(sessionTarget(legacy,'squat'),2);assert.ok(legacy.exerciseIds.includes('curl'));assert.ok(!legacy.exerciseIds.includes('farmer'));
+});
+test('Timed unilateral work pauses, resumes, and requires an explicit second side',async()=>{
+  const {createWorkTimer,toggleWorkTimer,settleWorkTimer,timerRemaining}=await import('../core.mjs');
+  const t=createWorkTimer('sideplank',30);toggleWorkTimer(t,1000);assert.equal(timerRemaining(t,6000),25000);
+  toggleWorkTimer(t,6000);assert.equal(timerRemaining(t,100000),25000);
+  toggleWorkTimer(t,100000);assert.equal(t.until,125000);assert.equal(settleWorkTimer(t,125000),true);
+  assert.equal(t.done,false);assert.equal(t.awaitingSide,true);assert.equal(settleWorkTimer(t,500000),false);
+  toggleWorkTimer(t,500000);assert.equal(t.side,2);assert.equal(t.until,530000);
+  settleWorkTimer(t,530001);assert.equal(t.done,true);assert.equal(t.awaitingSide,false);
+});
+test('Running work timers survive backup and completion never awards XP',async()=>{
+  const {createSession,createWorkTimer,toggleWorkTimer,settleWorkTimer}=await import('../core.mjs');
+  const s=defaultState();s.activeSession=createSession('homeA',2);s.activeSession.exerciseIndex=5;
+  s.activeSession.workTimer={...createWorkTimer('farmer',30),weight:10};toggleWorkTimer(s.activeSession.workTimer,1000);
+  const restored=validateBackup(JSON.parse(JSON.stringify(s)));
+  assert.equal(restored.activeSession.workTimer.until,31000);assert.equal(restored.activeSession.workTimer.weight,10);
+  settleWorkTimer(restored.activeSession.workTimer,32000);assert.equal(totalXP(restored),0);assert.equal(restored.activeSession.sets.length,0);
+  const invalid=structuredClone(s);invalid.activeSession.workTimer.seconds=-1;assert.throws(()=>validateBackup(invalid));
+  assert.throws(()=>createWorkTimer('squat',30));assert.throws(()=>createWorkTimer('farmer',0));
+});
+test('Every movement has an original demo, plans have unique known moves, and carry time is not rep volume',async()=>{
+  const {EXERCISES,WORKOUTS}=await import('../data.mjs');const {MOVEMENT_IDS}=await import('../moves.mjs');
+  for(const e of Object.values(EXERCISES))assert.ok(MOVEMENT_IDS.includes(e.move),e.name);
+  for(const w of Object.values(WORKOUTS)){assert.equal(new Set(w.exerciseIds).size,w.exerciseIds.length);assert.ok(w.exerciseIds.every(id=>Object.hasOwn(EXERCISES,id)));}
+  const s=session('2026-11-19');s.sets=[{exerciseId:'farmer',reps:45,weight:20}];assert.equal(totalVolume(s),0);
+});
